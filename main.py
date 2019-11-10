@@ -63,31 +63,7 @@ output.append(output_row)
 train = numpy.array(training)
 output = numpy.array(output)
 
-with open("data.pickle","wb") as f:
-    pickle.dump((words, labels, train, output),f)
-
-
-
-tensorflow.reset_default_graph()
-
-net = tflearn.input_data(shape=[None, len(train[0])])
-
-# hidden layer 
-net = tflearn.fully_connected(net, 8)
-net = tflearn.fully_connected(net, 8)
-
-# output layer
-net = tflearn.fully_connected(net, len(output[0]), activation = "softmax")
-net = tflearn.regression(net)
-
-model = tflearn.DNN(net)
-
-try:
-    model.load("model.tflearn")
-
-except:        
-    model.fit(train, output, n_epoch=1000, batch_size=8, show_metric=True)
-    model.save("model.tflearn")
+#model will be placed here after error resolving
 
 def bag_of_words(s, words):
     bag = [0 for _ in range(len(words))]
