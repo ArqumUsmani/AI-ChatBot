@@ -14,7 +14,7 @@ with open("intents.json") as file:
     data = json.load(file)
 
 try:
-    with open("data.pickle","rb") as f:
+    with open("data.pickle", "rb") as f:
         words, labels, train, output = pickle.load(f)
 
 except:
@@ -28,7 +28,7 @@ for intent in data["intents"]:
 # stemmer will take words and get only root word like whats will be what
         wrds = nltk.word_tokanize(patern)
         words.extend(wrds)
-        docs.append(patern)
+        docs_a.append(patern)
 
     if intent["tag"] not in labels:
         labels.append(intent["tag"])
@@ -39,7 +39,7 @@ for intent in data["intents"]:
 # creating bag of words for training model
 train = []
 output = []
-empty_out=[0 for _ in range(len(labels))]
+empty_out = [0 for _ in range(len(labels))]
 
 for a, doc in enumerate(docs_a):
     bag = []
@@ -55,15 +55,40 @@ for w in words:
         bag.append(0)
         
 output_row = empty_out[:]
-output_row[labels.index(docs_b[x])] = 1
+output_row[labels.index(docs_b[:])] = 1
 
 train.append(bag)
 output.append(output_row)
 
-train = numpy.array(training)
+train = numpy.array(train)
 output = numpy.array(output)
 
 #model will be placed here after error resolving
+with open("data.pickle", "wb") as f:
+    pickle.dump((words, labels, train, output), f)
+
+
+
+tensorflow.reset_default_graph()
+
+net = tflearn.input_data(shape=[None, len(train[0])])
+
+# hidden layer
+net = tflearn.fully_connected(net, 8)
+net = tflearn.fully_connected(net, 8)
+
+# output layer
+net = tflearn.fully_connected(net, len(output[0]), activation="softmax")
+net = tflearn.regression(net)
+
+model = tflearn.DNN(net)
+
+try:
+    model.load("model.tflearn")
+
+except:
+    model.fit(train, output, n_epoch=1000, batch_size=8, show_metric=True)
+    model.save("model.tflearn")
 
 def bag_of_words(s, words):
     bag = [0 for _ in range(len(words))]
@@ -73,7 +98,7 @@ def bag_of_words(s, words):
     for se in s_words:
         for i, w in enumerate(words):
             if w == se:
-                bag[i]= 1
+                bag[i] = 1
     return numpy.array(bag)
 
 def chatting():
@@ -83,7 +108,7 @@ while True:
     if inp.lower() == "quit":
         break
     result = model.predict([bag_of_words(inp, words)])
-    results_index = numpy.argmax(results)
+    results_index = numpy.argmax(result)
     tag = labels[results_index]
 
     for tg in data["intents"]:
